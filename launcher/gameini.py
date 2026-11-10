@@ -129,6 +129,7 @@ CHOICES = {
     'framegen': {**_DEFAULT, 'off': 'Off', 'fsr3': 'AMD FSR 3.1', 'dlss': 'NVIDIA DLSS'},
     'game_res': {**_DEFAULT, **{str(n): f'{n}p' for n in (1080, 1440, 1800, 2160, 2880)}, 'window': 'Window height'},
     'fullscreen': _TOGGLE, 'microphone': _TOGGLE,
+    'perf_overlay': {**_DEFAULT, 'off': 'Off', 'fps': 'FPS', 'full': 'Full panel'},
 }
 _UPSCALING_KEYS = ('upscaler', 'dlaa', 'taa', 'dlss')
 

@@ -24,13 +24,13 @@ class GameOptionsTest(unittest.TestCase):
         self.assertEqual(original['fps_limit'], '73')
         self.assertTrue(all(v == 'default' for k, v in original.items() if k != 'fps_limit'))
         gameini.save_options(self.game, {'upscaling': 'dlss-quality', 'framegen': 'dlss', 'game_res': '2160',
-                                        'microphone': '0', 'fullscreen': '1'}, original)
+                                        'microphone': '0', 'fullscreen': '1', 'perf_overlay': 'full'}, original)
         self.assertEqual(gameini.get(self.game, 'dlaa'), '1')
         self.assertEqual(gameini.get(self.game, 'taa'), 'dlss')
         self.assertEqual(gameini.get(self.game, 'dlss'), 'quality')
         self.assertEqual(gameini.get(self.game, 'upscaler'), 'bilinear')
         self.assertEqual(gameini.read_options(self.game), {'fps_limit': '73', 'upscaling': 'dlss-quality',
-                         'framegen': 'dlss', 'game_res': '2160', 'microphone': '0', 'fullscreen': '1'})
+                         'framegen': 'dlss', 'game_res': '2160', 'microphone': '0', 'fullscreen': '1', 'perf_overlay': 'full'})
         self.assertTrue(self.ini.read_bytes().startswith(b'\xef\xbb\xbf' + untouched))
         self.assertNotIn(b'\n', self.ini.read_bytes().replace(b'\r\n', b''))
 
