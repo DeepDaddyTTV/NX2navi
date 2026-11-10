@@ -42,6 +42,7 @@ static struct { uint64_t addr; GuestFn fn; } g_host[HOST_CAP];
 static uint64_t g_nhost;
 
 void rt_fatal(const char *fmt, ...) {
+    rt_log_crash(1);
     va_list ap;
     va_start(ap, fmt);
     rt_log_raw("FATAL: ", 7);
