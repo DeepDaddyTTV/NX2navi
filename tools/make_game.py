@@ -1740,6 +1740,12 @@ def main():
             tmp.write_text(json.dumps(state, indent=1), encoding='utf-8')
             os.replace(tmp, state_path)
 
+    # Keep Build Cache off removes the generated sources but leaves state.json for --rebuild.
+    # Forget the old lift before gen.py can recreate layout.json and then be interrupted.
+    if 'lift' in state['steps'] and not (cache / 'lift' / 'layout.json').is_file():
+        del state['steps']['lift']
+        save()
+
     if reset:
         # on disk at once: the exefs step rewrites <out>/exefs in place, and a run cut short there would leave the
         # old state.json saying the old game's steps are done, which --rebuild trusts
