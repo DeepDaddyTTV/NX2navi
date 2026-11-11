@@ -3,7 +3,9 @@
 #include <assert.h>
 
 static bool deny_recording;
+static int device_open_calls;
 static SDL_AudioDeviceID open_test_device(SDL_AudioDeviceID device, const SDL_AudioSpec *spec) {
+    device_open_calls++;
     if (deny_recording) {
         SDL_SetError("simulated recording permission denial");
         return 0;
@@ -161,13 +163,16 @@ static void polling_check(void) {
 }
 
 static void independent_streams_check(void) {
+    int previous_calls = device_open_calls;
     MicCapture *a = mic_open(2, 1, 48000, 4800);
     MicCapture *b = mic_open(2, 1, 48000, 4800);
     assert(a && b);
+    assert(device_open_calls == previous_calls);
     assert(SDL_GetAudioStreamDevice(a->stream) == 0 && SDL_GetAudioStreamDevice(b->stream) == 0);
     assert(mic_start(a));
     assert(SDL_GetAudioStreamDevice(b->stream) == 0);
     assert(mic_start(b));
+    assert(device_open_calls == previous_calls + 2);
     SDL_AudioDeviceID active = SDL_GetAudioStreamDevice(b->stream);
     assert(active && active != SDL_GetAudioStreamDevice(a->stream));
     mic_close(a);
@@ -185,6 +190,6 @@ int main(void) {
     polling_check();
     independent_streams_check();
     SDL_DestroyMutex(registry_lock);
-    puts("PASS: sample order, bounded overflow, polling frame units, reopen, purge and failed-open regression");
+    puts("PASS: bounded capture, idle streams, start/stop, failed start and retry, independent streams and purge");
     return 0;
 }
