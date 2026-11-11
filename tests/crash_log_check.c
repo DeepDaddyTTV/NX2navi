@@ -33,15 +33,31 @@ Cpu *kern_cpu(void) { return NULL; }
 const char *ldr_describe(uint64_t a, char *buf, int n) { return "guest"; }
 int plat_mem_readable(uint64_t addr, uint64_t n) { return 0; }
 uintptr_t plat_exe_base(void) { return 0; }
+// Leave the log thread unscheduled so that all queued lines are still pending when the fatal path drains them.
+const char *cfg_get(const char *key) { return getenv(key); }
+int plat_thread_spawn(PlatThreadFn fn, void *arg, const char *name, size_t stack) { return 1; }
+void plat_mutex_lock(PlatMutex *m) {}
+int plat_mutex_trylock(PlatMutex *m) { return 1; }
+void plat_mutex_unlock(PlatMutex *m) {}
+void plat_cond_wait(PlatCond *c, PlatMutex *m) { abort(); }
+void plat_cond_signal(PlatCond *c) {}
+void plat_sleep_ms(uint32_t ms) {}
+uint64_t plat_now_ns(void) { return 0; }
+void (*plat_exit_hook)(void);
 void rtss_limit_restore(void) {}
 void plat_exit(int code) { _Exit(code); }
 
 int main(int argc, char **argv) {
     log_open(1);
     rt_log("run %s", argv[1]);
-    if (!strcmp(argv[1], "clean")) return 0;
+    if (!strcmp(argv[1], "clean")) { rt_log_sync(); return 0; }
     g_log_bytes = LOG_CAP;
     rt_log("ordinary trace beyond the cap");
+    if (!strcmp(argv[1], "fallback")) g_crash_file = NULL;   // the companion could not be opened
+    int previous = rt_log_crash(1);
+    rt_log("GPU fault breadcrumb");
+    rt_log_crash(previous);
+    rt_log("ordinary trace after the breadcrumb");
     if (!strcmp(argv[1], "exception")) {
         PlatCrash fault = {.what = "synthetic exception", .module = "driver", .access = -1, .offset = 42};
         crash_handler(&fault);

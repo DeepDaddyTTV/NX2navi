@@ -42,9 +42,10 @@ static struct { uint64_t addr; GuestFn fn; } g_host[HOST_CAP];
 static uint64_t g_nhost;
 
 void rt_fatal(const char *fmt, ...) {
-    rt_log_crash(1);
     va_list ap;
     va_start(ap, fmt);
+    rt_log_sync();   // main.c: the lines queued for the log thread, then these, written here
+    rt_log_crash(1);
     rt_log_raw("FATAL: ", 7);
     rt_vlogf(fmt, ap);
     rt_log_raw("\n", 1);
@@ -56,6 +57,9 @@ void rt_fatal(const char *fmt, ...) {
     rt_log("fatal: memory commit: this process %.0f MB, the system %.0f of %.0f MB", proc, used, limit);
     kern_free_cores_note();
     prof_sampler_write();   // NX2NAVI_PROFILE: what was sampled until now, else a crash loses the whole profile
+    // RivaTuner Statistics Server's profile as it was: left with the game's limit in it, the next run would take that
+    // limit for the player's own (rtss_limit.c; it gives up after a second if the failing thread holds its lock)
+    rtss_limit_restore();
     fflush(stdout);
     fflush(stderr);
     _Exit(70);
