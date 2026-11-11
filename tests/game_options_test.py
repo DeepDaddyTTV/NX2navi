@@ -18,8 +18,9 @@ class GameOptionsTest(unittest.TestCase):
         self.ini = self.game / 'nx2navi.ini'
 
     def test_grouped_save_and_unrelated_settings(self):
-        untouched = b'# Some notes\r\n[mods]\r\nmods_order = "Custom \xe9"\r\n'
-        self.ini.write_bytes(b'\xef\xbb\xbf' + untouched + b'[frame rate]\r\nFPS_LIMIT = 73\r\n')
+        untouched = b'\xef\xbb\xbf# Some notes\r\n[mods]\r\nmods_order = "Custom \xe9"\r\n'
+        multipliers = b'fg_mult = dynamic\r\nframegen_multiplier = 4\r\n'
+        self.ini.write_bytes(untouched + b'[display]\r\n' + multipliers + b'[frame rate]\r\nFPS_LIMIT = 73\r\n')
         original = gameini.read_options(self.game)
         self.assertEqual(original['fps_limit'], '73')
         self.assertTrue(all(v == 'default' for k, v in original.items() if k != 'fps_limit'))
@@ -31,7 +32,8 @@ class GameOptionsTest(unittest.TestCase):
         self.assertEqual(gameini.get(self.game, 'upscaler'), 'bilinear')
         self.assertEqual(gameini.read_options(self.game), {'fps_limit': '73', 'upscaling': 'dlss-quality',
                          'framegen': 'dlss', 'game_res': '2160', 'microphone': '0', 'fullscreen': '1', 'perf_overlay': 'full'})
-        self.assertTrue(self.ini.read_bytes().startswith(b'\xef\xbb\xbf' + untouched))
+        self.assertTrue(self.ini.read_bytes().startswith(untouched))
+        self.assertIn(multipliers, self.ini.read_bytes())
         self.assertNotIn(b'\n', self.ini.read_bytes().replace(b'\r\n', b''))
 
     def test_temporal_modes_and_dependency(self):
